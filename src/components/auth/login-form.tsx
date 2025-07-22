@@ -61,8 +61,7 @@ export function LoginForm() {
           router.push("/admin");
           break;
         case "staff":
-          // Redirect to a future staff dashboard
-          router.push("/dashboard"); 
+          router.push("/staff"); 
           break;
         case "customer":
         default:
