@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   dateRange: z.object({
@@ -27,9 +29,18 @@ const formSchema = z.object({
   reason: z.string().min(10, { message: "Reason must be at least 10 characters." }).max(200, { message: "Reason must be less than 200 characters." }),
 });
 
+type LeaveRequest = {
+  id: string;
+  startDate: Date;
+  endDate: Date;
+  reason: string;
+  status: 'Pending' | 'Approved' | 'Denied';
+};
+
 export default function StaffLeavePage() {
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
+  const [requestHistory, setRequestHistory] = React.useState<LeaveRequest[]>([]);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,15 +51,23 @@ export default function StaffLeavePage() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
-    console.log(values);
     // Simulate API call
     setTimeout(() => {
+        const newRequest: LeaveRequest = {
+            id: `LR${(requestHistory.length + 1).toString().padStart(3, '0')}`,
+            startDate: values.dateRange.from,
+            endDate: values.dateRange.to,
+            reason: values.reason,
+            status: 'Pending',
+        };
+        setRequestHistory(prev => [newRequest, ...prev]);
+
         toast({
             title: "Request Submitted!",
             description: "Your leave request has been sent for approval.",
         });
+        
         form.reset();
-        // also reset date range
         form.setValue('dateRange', { from: undefined, to: undefined });
         setLoading(false);
     }, 1000);
@@ -108,6 +127,7 @@ export default function StaffLeavePage() {
                           selected={field.value as DateRange}
                           onSelect={field.onChange}
                           numberOfMonths={2}
+                          disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
                         />
                       </PopoverContent>
                     </Popover>
@@ -146,7 +166,32 @@ export default function StaffLeavePage() {
           <CardDescription>Your past and pending leave requests.</CardDescription>
         </CardHeader>
         <CardContent>
-            <p className="text-muted-foreground">Leave request history will be displayed here.</p>
+            {requestHistory.length > 0 ? (
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Dates</TableHead>
+                            <TableHead>Reason</TableHead>
+                            <TableHead>Status</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {requestHistory.map((request) => (
+                            <TableRow key={request.id}>
+                                <TableCell>{format(request.startDate, "LLL dd, y")} - {format(request.endDate, "LLL dd, y")}</TableCell>
+                                <TableCell>{request.reason}</TableCell>
+                                <TableCell>
+                                    <Badge variant={request.status === 'Approved' ? 'default' : request.status === 'Denied' ? 'destructive' : 'secondary'}>
+                                        {request.status}
+                                    </Badge>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            ) : (
+                 <p className="text-muted-foreground">No leave requests submitted yet.</p>
+            )}
         </CardContent>
       </Card>
     </div>
