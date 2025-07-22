@@ -35,6 +35,11 @@ const formSchema = z.object({
 export function LoginForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,6 +58,10 @@ export function LoginForm() {
       // and redirect based on the actual role from the server.
       router.push("/dashboard");
     }, 1000);
+  }
+
+  if (!isMounted) {
+    return null;
   }
 
   return (
