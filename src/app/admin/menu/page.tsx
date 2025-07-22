@@ -62,7 +62,7 @@ export default function AdminMenuPage() {
     if (editingDish) {
       form.reset({
         ...editingDish,
-        tags: editingDish.tags.join(', '),
+        tags: Array.isArray(editingDish.tags) ? editingDish.tags.join(', ') : '',
       });
     } else {
       form.reset({
