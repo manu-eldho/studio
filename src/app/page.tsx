@@ -1,4 +1,4 @@
-import { Hotel, Waves } from 'lucide-react';
+import { UtensilsCrossed } from 'lucide-react';
 import { LoginForm } from '@/components/auth/login-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -9,11 +9,11 @@ export default function Home() {
         <Card className="shadow-2xl bg-card/80 backdrop-blur-sm border-white/20">
           <CardHeader className="text-center">
             <div className="mx-auto bg-primary rounded-full p-3 w-fit mb-4">
-              <Hotel className="h-8 w-8 text-primary-foreground" />
+              <UtensilsCrossed className="h-8 w-8 text-primary-foreground" />
             </div>
-            <CardTitle className="font-headline text-3xl">Coral Stay</CardTitle>
+            <CardTitle className="font-headline text-3xl">The Golden Spoon</CardTitle>
             <CardDescription>
-              Welcome back! Please select your role to login.
+              Welcome! Please select your role to login.
             </CardDescription>
           </CardHeader>
           <CardContent>

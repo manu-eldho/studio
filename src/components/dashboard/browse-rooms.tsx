@@ -1,86 +1,90 @@
-import { RoomCard } from "./room-card";
-import { Room } from "@/lib/types";
-import { DatePickerWithRange } from "../ui/date-picker-with-range";
+import { DishCard } from "./dish-card";
+import { Dish } from "@/lib/types";
+import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
-import { Filter } from "lucide-react";
+import { Filter, Search } from "lucide-react";
 
-const rooms: Room[] = [
+const menu: Dish[] = [
   {
     id: "1",
-    name: "Ocean View Suite",
-    description: "Spacious suite with a breathtaking view of the ocean.",
-    price: 350,
-    image: "https://placehold.co/600x400/FF6B6B/FFFFFF",
-    type: "Suite",
-    features: ["King Bed", "Ocean View", "Balcony", "Jacuzzi"],
+    name: "Spicy Szechuan Chicken",
+    description: "A fiery classic with tender chicken, peanuts, and chili peppers.",
+    price: 18.50,
+    image: "https://placehold.co/600x400/c2410c/FFFFFF",
+    category: "Main Course",
+    tags: ["Spicy", "Chicken", "Popular"],
   },
   {
     id: "2",
-    name: "Deluxe King Room",
-    description: "A comfortable room with a king-sized bed.",
-    price: 180,
-    image: "https://placehold.co/600x400/FFD93D/FFFFFF",
-    type: "Double",
-    features: ["King Bed", "City View"],
+    name: "Classic Margherita Pizza",
+    description: "Simple yet delicious with fresh mozzarella, tomatoes, and basil.",
+    price: 14.00,
+    image: "https://placehold.co/600x400/facc15/FFFFFF",
+    category: "Main Course",
+    tags: ["Vegetarian", "Italian"],
   },
   {
     id: "3",
-    name: "Standard Queen Room",
-    description: "Perfect for solo travelers or couples.",
-    price: 120,
-    image: "https://placehold.co/600x400/6BCB77/FFFFFF",
-    type: "Single",
-    features: ["Queen Bed", "Garden View"],
+    name: "Crispy Spring Rolls",
+    description: "Golden-fried rolls filled with vegetables and glass noodles.",
+    price: 8.00,
+    image: "https://placehold.co/600x400/fbbf24/FFFFFF",
+    category: "Appetizer",
+    tags: ["Vegetarian", "Starter"],
   },
   {
     id: "4",
-    name: "Family Garden Bungalow",
-    description: "A spacious bungalow perfect for families, with a private garden.",
-    price: 280,
-    image: "https://placehold.co/600x400/4D96FF/FFFFFF",
-    type: "Suite",
-    features: ["Two Queen Beds", "Garden View", "Kitchenette"],
+    name: "Gourmet Truffle Burger",
+    description: "Juicy beef patty with truffle aioli, arugula, and swiss cheese.",
+    price: 22.00,
+    image: "https://placehold.co/600x400/ea580c/FFFFFF",
+    category: "Main Course",
+    tags: ["Beef", "Gourmet"],
   },
   {
     id: "5",
-    name: "Honeymoon Suite",
-    description: "Romantic suite with premium amenities and ultimate privacy.",
-    price: 450,
-    image: "https://placehold.co/600x400/f87171/FFFFFF",
-    type: "Suite",
-    features: ["King Bed", "Ocean View", "Private Pool"],
+    name: "Decadent Chocolate Lava Cake",
+    description: "Warm, molten chocolate cake served with a scoop of vanilla ice cream.",
+    price: 9.50,
+    image: "https://placehold.co/600x400/d97706/FFFFFF",
+    category: "Dessert",
+    tags: ["Sweet", "Chocolate"],
   },
   {
     id: "6",
-    name: "Accessible Twin Room",
-    description: "Designed for comfort and accessibility.",
-    price: 150,
-    image: "https://placehold.co/600x400/34d399/FFFFFF",
-    type: "Double",
-    features: ["Two Twin Beds", "Accessible Bathroom"],
+    name: "Refreshing Mojito",
+    description: "A classic Cuban cocktail with mint, lime, and rum.",
+    price: 12.00,
+    image: "https://placehold.co/600x400/a3e635/FFFFFF",
+    category: "Drink",
+    tags: ["Cocktail", "Alcoholic"],
   },
 ];
 
-export function BrowseRooms() {
+export function BrowseMenu() {
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold font-headline">Explore Our Rooms</h2>
-        <p className="text-muted-foreground">Find the perfect room for your stay.</p>
+        <h2 className="text-2xl font-bold font-headline">Explore Our Menu</h2>
+        <p className="text-muted-foreground">Find the perfect dish to satisfy your cravings.</p>
       </div>
 
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
         <div className="flex flex-col md:flex-row gap-4 items-center">
-            <DatePickerWithRange className="w-full md:w-auto" />
+            <div className="relative w-full md:w-auto md:flex-grow">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search for a dish..." className="pl-8 w-full" />
+            </div>
             <Select>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Room Type" />
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="single">Single</SelectItem>
-                <SelectItem value="double">Double</SelectItem>
-                <SelectItem value="suite">Suite</SelectItem>
+                <SelectItem value="main">Main Course</SelectItem>
+                <SelectItem value="appetizer">Appetizer</SelectItem>
+                <SelectItem value="dessert">Dessert</SelectItem>
+                <SelectItem value="drink">Drink</SelectItem>
               </SelectContent>
             </Select>
             <Button className="w-full md:w-auto">
@@ -90,8 +94,8 @@ export function BrowseRooms() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {rooms.map((room) => (
-          <RoomCard key={room.id} room={room} />
+        {menu.map((dish) => (
+          <DishCard key={dish.id} dish={dish} />
         ))}
       </div>
     </section>

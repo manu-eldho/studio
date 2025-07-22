@@ -1,9 +1,9 @@
-export interface Room {
+export interface Dish {
   id: string;
   name: string;
   description: string;
   price: number;
   image: string;
-  type: 'Single' | 'Double' | 'Suite';
-  features: string[];
+  category: 'Main Course' | 'Appetizer' | 'Dessert' | 'Drink';
+  tags: string[];
 }

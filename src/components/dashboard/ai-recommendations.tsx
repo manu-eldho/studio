@@ -4,8 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import React from "react";
-import { addDays, format } from "date-fns";
-import { DateRange } from "react-day-picker";
 
 import {
   Form,
@@ -19,19 +17,14 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Loader2, Sparkles, Wand2, Utensils, GlassWater, Beef } from "lucide-react";
 import { getRecommendations } from "@/app/actions";
-import type { RecommendActivitiesOutput } from "@/ai/flows/recommend-activities";
+import type { RecommendDishesOutput } from "@/ai/flows/recommend-activities";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "../ui/skeleton";
 
 const formSchema = z.object({
-  reservationDates: z.custom<DateRange>(
-    (val) => val instanceof Object && "from" in val && "to" in val, { message: "Reservation dates are required." }
-  ),
   preferences: z.string().min(10, { message: "Please describe your preferences in at least 10 characters." }),
 });
 
@@ -60,15 +53,11 @@ const RecommendationResultCard = ({ title, content, icon: Icon }: { title: strin
 export function AiRecommendations() {
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
-  const [recommendations, setRecommendations] = React.useState<RecommendActivitiesOutput | null>(null);
+  const [recommendations, setRecommendations] = React.useState<RecommendDishesOutput | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      reservationDates: {
-        from: new Date(),
-        to: addDays(new Date(), 7),
-      },
       preferences: "",
     },
   });
@@ -78,9 +67,8 @@ export function AiRecommendations() {
     setRecommendations(null);
 
     const input = {
-      reservationDates: `From ${format(values.reservationDates.from!, "yyyy-MM-dd")} to ${format(values.reservationDates.to!, "yyyy-MM-dd")}`,
       preferences: values.preferences,
-      profileData: "Frequent guest, prefers quiet rooms with a view. Previously booked spa packages.",
+      profileData: "Frequent customer, prefers spicy food. No seafood allergies.",
     };
 
     const result = await getRecommendations(input);
@@ -106,83 +94,35 @@ export function AiRecommendations() {
             <Sparkles className="w-8 h-8 text-primary" />
           </div>
           <div>
-            <CardTitle className="font-headline text-2xl">AI Concierge</CardTitle>
-            <CardDescription>Let us tailor your perfect stay. Tell us what you're looking for.</CardDescription>
+            <CardTitle className="font-headline text-2xl">AI Sommelier</CardTitle>
+            <CardDescription>Let us recommend the perfect meal for you. Tell us what you're craving.</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid md:grid-cols-2 gap-8">
-              <FormField
-                control={form.control}
-                name="reservationDates"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Your Stay Dates</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value?.from ? (
-                              field.value.to ? (
-                                <>
-                                  {format(field.value.from, "LLL dd, y")} -{" "}
-                                  {format(field.value.to, "LLL dd, y")}
-                                </>
-                              ) : (
-                                format(field.value.from, "LLL dd, y")
-                              )
-                            ) : (
-                              <span>Pick your dates</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="range"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          numberOfMonths={2}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="preferences"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preferences & Interests</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="e.g., 'Looking for a quiet and relaxing trip. Interested in spa treatments, fine dining, and maybe some light hiking.'"
-                        className="resize-none"
-                        rows={4}
-                        {...field}
-                      />
-                    </FormControl>
-                     <FormDescription>
-                       The more details you provide, the better our recommendations will be.
-                     </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="preferences"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tastes & Preferences</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g., 'I'm looking for something spicy and savory. I love chicken and I'm open to trying new things. Maybe a refreshing drink to go with it.'"
+                      className="resize-none"
+                      rows={4}
+                      {...field}
+                    />
+                  </FormControl>
+                    <FormDescription>
+                      The more details you provide, the better our recommendations will be.
+                    </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <Button type="submit" disabled={loading} size="lg" className="w-full md:w-auto">
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -196,7 +136,7 @@ export function AiRecommendations() {
         
         {(loading || recommendations) && (
             <div className="mt-8 pt-8 border-t">
-                <h3 className="text-xl font-headline font-bold mb-4">Your Personal Itinerary</h3>
+                <h3 className="text-xl font-headline font-bold mb-4">Your Personal Menu</h3>
                 {loading ? (
                     <div className="grid md:grid-cols-3 gap-4">
                         <Skeleton className="h-48 w-full" />
@@ -205,9 +145,9 @@ export function AiRecommendations() {
                     </div>
                 ) : recommendations ? (
                     <div className="grid md:grid-cols-3 gap-4">
-                        <RecommendationResultCard title="Room Suggestions" content={recommendations.roomRecommendations} icon={BedDouble} />
-                        <RecommendationResultCard title="Suggested Services" content={recommendations.serviceRecommendations} icon={Sparkles} />
-                        <RecommendationResultCard title="Local Attractions" content={recommendations.localAttractionRecommendations} icon={Wand2} />
+                        <RecommendationResultCard title="Main Dish Suggestions" content={recommendations.dishRecommendations} icon={Beef} />
+                        <RecommendationResultCard title="Appetizer Suggestions" content={recommendations.appetizerRecommendations} icon={Utensils} />
+                        <RecommendationResultCard title="Drink Pairings" content={recommendations.drinkRecommendations} icon={GlassWater} />
                     </div>
                 ) : null}
             </div>

@@ -1,47 +1,49 @@
 import Image from "next/image";
-import { Room } from "@/lib/types";
+import { Dish } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Tag } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 
-interface RoomCardProps {
-  room: Room;
+interface DishCardProps {
+  dish: Dish;
 }
 
-export function RoomCard({ room }: RoomCardProps) {
+export function DishCard({ dish }: DishCardProps) {
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
       <CardHeader className="p-0">
         <div className="relative">
           <Image
-            src={room.image}
-            alt={room.name}
+            src={dish.image}
+            alt={dish.name}
             width={600}
             height={400}
             className="w-full h-48 object-cover"
-            data-ai-hint="hotel room"
+            data-ai-hint="gourmet food dish"
           />
-           <Badge variant="destructive" className="absolute top-2 right-2 bg-primary/90 backdrop-blur-sm">
-            {room.type}
+           <Badge variant="secondary" className="absolute top-2 right-2 bg-secondary/90 backdrop-blur-sm">
+            {dish.category}
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="p-6 flex-grow">
-        <CardTitle className="font-headline text-xl mb-2">{room.name}</CardTitle>
-        <CardDescription>{room.description}</CardDescription>
+        <CardTitle className="font-headline text-xl mb-2">{dish.name}</CardTitle>
+        <CardDescription>{dish.description}</CardDescription>
         <div className="mt-4 flex flex-wrap gap-2">
-            {room.features.map(feature => (
-                <Badge key={feature} variant="secondary">{feature}</Badge>
+            {dish.tags.map(tag => (
+                <Badge key={tag} variant="outline">{tag}</Badge>
             ))}
         </div>
       </CardContent>
       <CardFooter className="flex justify-between items-center p-6 bg-muted/50">
         <div>
-          <span className="text-2xl font-bold">${room.price}</span>
-          <span className="text-sm text-muted-foreground">/night</span>
+          <span className="text-2xl font-bold">${dish.price.toFixed(2)}</span>
         </div>
-        <Button>Book Now</Button>
+        <Button>
+            <PlusCircle className="mr-2" />
+            Add to Order
+        </Button>
       </CardFooter>
     </Card>
   );

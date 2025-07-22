@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Coral Stay',
-  description: 'Modern Hotel Management',
+  title: 'The Golden Spoon',
+  description: 'Gourmet Food Ordering',
 };
 
 export default function RootLayout({
@@ -17,9 +17,9 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@400;600&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-900 dark:to-background">
+      <body className="font-body antialiased bg-gradient-to-br from-gray-50 to-amber-100/50 dark:from-gray-900 dark:to-background">
         {children}
         <Toaster />
       </body>

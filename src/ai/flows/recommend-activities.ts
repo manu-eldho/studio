@@ -1,56 +1,54 @@
-// src/ai/flows/recommend-activities.ts
+// src/ai/flows/recommend-dishes.ts
 'use server';
 /**
- * @fileOverview A flow that recommends activities, services, and rooms to users.
+ * @fileOverview A flow that recommends dishes to users.
  *
- * - recommendActivities - A function that takes in user preferences and reservation details and returns recommendations.
- * - RecommendActivitiesInput - The input type for the recommendActivities function.
- * - RecommendActivitiesOutput - The return type for the recommendActivities function.
+ * - recommendDishes - A function that takes in user preferences and returns recommendations.
+ * - RecommendDishesInput - The input type for the recommendDishes function.
+ * - RecommendDishesOutput - The return type for the recommendDishes function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const RecommendActivitiesInputSchema = z.object({
-  reservationDates: z.string().describe('The start and end dates of the reservation.'),
-  preferences: z.string().describe('The user preferences for activities, services, and rooms.'),
-  profileData: z.string().describe('The user profile data including past stays and demographics.'),
+const RecommendDishesInputSchema = z.object({
+  preferences: z.string().describe('The user preferences for dishes, flavors, and ingredients.'),
+  profileData: z.string().describe('The user profile data including past orders and dietary restrictions.'),
 });
-export type RecommendActivitiesInput = z.infer<typeof RecommendActivitiesInputSchema>;
+export type RecommendDishesInput = z.infer<typeof RecommendDishesInputSchema>;
 
-const RecommendActivitiesOutputSchema = z.object({
-  roomRecommendations: z.string().describe('AI-powered recommendations for rooms.'),
-  serviceRecommendations: z.string().describe('AI-powered recommendations for services.'),
-  localAttractionRecommendations: z.string().describe('AI-powered recommendations for local attractions.'),
+const RecommendDishesOutputSchema = z.object({
+  dishRecommendations: z.string().describe('AI-powered recommendations for main courses.'),
+  appetizerRecommendations: z.string().describe('AI-powered recommendations for appetizers.'),
+  drinkRecommendations: z.string().describe('AI-powered recommendations for drinks.'),
 });
-export type RecommendActivitiesOutput = z.infer<typeof RecommendActivitiesOutputSchema>;
+export type RecommendDishesOutput = z.infer<typeof RecommendDishesOutputSchema>;
 
-export async function recommendActivities(input: RecommendActivitiesInput): Promise<RecommendActivitiesOutput> {
-  return recommendActivitiesFlow(input);
+export async function recommendDishes(input: RecommendDishesInput): Promise<RecommendDishesOutput> {
+  return recommendDishesFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'recommendActivitiesPrompt',
-  input: {schema: RecommendActivitiesInputSchema},
-  output: {schema: RecommendActivitiesOutputSchema},
-  prompt: `You are an AI travel assistant for Coral Stay. Based on the user's reservation dates, preferences, and profile data, provide personalized recommendations for rooms, services, and local attractions.
+  name: 'recommendDishesPrompt',
+  input: {schema: RecommendDishesInputSchema},
+  output: {schema: RecommendDishesOutputSchema},
+  prompt: `You are an AI sommelier for The Golden Spoon. Based on the user's preferences and profile data, provide personalized recommendations for dishes, appetizers, and drinks.
 
-Reservation Dates: {{{reservationDates}}}
 Preferences: {{{preferences}}}
 Profile Data: {{{profileData}}}
 
 Provide recommendations in a structured format.
 
-Rooms: 
-Services: 
-Local Attractions:`,
+Dishes: 
+Appetizers: 
+Drinks:`,
 });
 
-const recommendActivitiesFlow = ai.defineFlow(
+const recommendDishesFlow = ai.defineFlow(
   {
-    name: 'recommendActivitiesFlow',
-    inputSchema: RecommendActivitiesInputSchema,
-    outputSchema: RecommendActivitiesOutputSchema,
+    name: 'recommendDishesFlow',
+    inputSchema: RecommendDishesInputSchema,
+    outputSchema: RecommendDishesOutputSchema,
   },
   async input => {
     const {output} = await prompt(input);

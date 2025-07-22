@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Hotel, Loader2, ShieldCheck, User } from "lucide-react";
+import { ChefHat, Loader2, ShieldCheck, User } from "lucide-react";
 import React from "react";
 
 const formSchema = z.object({
@@ -105,7 +105,7 @@ export function LoginForm() {
                   </SelectItem>
                   <SelectItem value="staff">
                     <div className="flex items-center gap-2">
-                      <Hotel className="h-4 w-4" />
+                      <ChefHat className="h-4 w-4" />
                       Staff
                     </div>
                   </SelectItem>
