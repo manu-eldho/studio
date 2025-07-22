@@ -8,9 +8,8 @@ A modern, responsive, and role-based hotel management system built using **React
 - Sign up / Login with role selector
 - Browse menu with images, prices, and stock status
 - Add items to cart and place orders
-- Choose between **Pay Now** (Stripe/Razorpay) and **Pay Later**
+- Choose between **Pay Now**  and **Pay Later**
 - View past orders and make pending payments
-- Receive alerts/notifications from admin
 
 ### 👨‍🍳 Staff
 - Login as staff and access staff dashboard
