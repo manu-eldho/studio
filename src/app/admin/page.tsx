@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart, BarChart3, CalendarClock, DollarSign, LineChart, Package, ScrollText, ShoppingCart, Users } from "lucide-react";
+import { BarChart, CalendarClock, DollarSign, Package, ScrollText, ShoppingCart, Users } from "lucide-react";
 import Link from "next/link";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from "recharts";
+import { BarChart as RechartsBarChart } from "recharts";
+
 
 const salesData = [
   { date: 'Mon', sales: 4000 },
@@ -90,13 +92,13 @@ export default function AdminDashboardPage() {
           <CardContent>
              <ChartContainer config={{}} className="h-64 w-full">
                <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                <RechartsBarChart data={salesData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="date" tickLine={false} axisLine={false} />
                     <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `$${value/1000}k`} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                </RechartsBarChart>
                </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
