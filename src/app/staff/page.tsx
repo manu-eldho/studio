@@ -1,33 +1,65 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { collection, doc, onSnapshot, query, updateDoc, where, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { Order } from "@/lib/types";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-type Order = {
-  id: string;
-  customerName: string;
-  items: string[];
-  status: "Pending" | "In Progress" | "Completed";
-};
-
-const initialOrders: Order[] = [
-  { id: 'ORD101', customerName: 'Alice Johnson', items: ['Margherita Pizza', 'Iced Tea'], status: 'Pending' },
-  { id: 'ORD102', customerName: 'Bob Williams', items: ['Spaghetti Carbonara', 'Caesar Salad'], status: 'Pending' },
-  { id: 'ORD103', customerName: 'Charlie Brown', items: ['Chocolate Lava Cake'], status: 'In Progress' },
-  { id: 'ORD104', customerName: 'Diana Miller', items: ['Margherita Pizza (x2)'], status: 'Completed' },
-];
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StaffDashboardPage() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const { toast } = useToast();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleUpdateStatus = (id: string, newStatus: Order['status']) => {
-    setOrders(currentOrders =>
-      currentOrders.map(order => (order.id === id ? { ...order, status: newStatus } : order))
+  useEffect(() => {
+    const q = query(
+      collection(db, "orders"),
+      where("status", "in", ["Pending", "In Progress"]),
+      orderBy("date", "asc")
     );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const fetchedOrders = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          date: data.date.toDate(),
+        } as Order;
+      });
+      setOrders(fetchedOrders);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching orders: ", error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to fetch orders." });
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [toast]);
+
+  const handleUpdateStatus = async (id: string, newStatus: Order['status']) => {
+    const orderRef = doc(db, "orders", id);
+    try {
+      await updateDoc(orderRef, { status: newStatus });
+      toast({
+        title: "Status Updated",
+        description: `Order #${id.slice(-4)} is now ${newStatus}.`,
+      });
+    } catch (error) {
+      console.error("Error updating status: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not update the order status.",
+      });
+    }
   };
 
   const getFilteredOrders = (status: Order['status']) => orders.filter(o => o.status === status);
@@ -46,34 +78,41 @@ export default function StaffDashboardPage() {
             <CardDescription>New orders waiting to be prepared.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order Details</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getFilteredOrders('Pending').map(order => (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <div className="font-medium">Order #{order.id.slice(-3)}</div>
-                      <div className="text-sm text-muted-foreground">{order.items.join(', ')}</div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" onClick={() => handleUpdateStatus(order.id, 'In Progress')}>
-                        Start Preparing
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {getFilteredOrders('Pending').length === 0 && (
+             {loading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-full" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={2} className="text-center text-muted-foreground">No pending orders.</TableCell>
+                    <TableHead>Order Details</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {getFilteredOrders('Pending').map(order => (
+                    <TableRow key={order.id}>
+                      <TableCell>
+                        <div className="font-medium">Order #{order.id.slice(-4)}</div>
+                        <div className="text-sm text-muted-foreground">{order.items.join(', ')}</div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" onClick={() => handleUpdateStatus(order.id, 'In Progress')}>
+                          Start Preparing
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {getFilteredOrders('Pending').length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center text-muted-foreground">No pending orders.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
@@ -83,34 +122,40 @@ export default function StaffDashboardPage() {
             <CardDescription>Orders currently being prepared.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-               <TableHeader>
-                <TableRow>
-                  <TableHead>Order Details</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getFilteredOrders('In Progress').map(order => (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <div className="font-medium">Order #{order.id.slice(-3)}</div>
-                      <div className="text-sm text-muted-foreground">{order.items.join(', ')}</div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                       <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(order.id, 'Completed')}>
-                        Mark as Completed
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                 {getFilteredOrders('In Progress').length === 0 && (
+            {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-14 w-full" />
+                </div>
+              ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={2} className="text-center text-muted-foreground">No orders in progress.</TableCell>
+                    <TableHead>Order Details</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {getFilteredOrders('In Progress').map(order => (
+                    <TableRow key={order.id}>
+                      <TableCell>
+                        <div className="font-medium">Order #{order.id.slice(-4)}</div>
+                        <div className="text-sm text-muted-foreground">{order.items.join(', ')}</div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(order.id, 'Out for Delivery')}>
+                          Mark as Ready
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {getFilteredOrders('In Progress').length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center text-muted-foreground">No orders in progress.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
