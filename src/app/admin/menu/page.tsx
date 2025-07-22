@@ -106,7 +106,7 @@ export default function AdminMenuPage() {
             batch.set(docRef, dish);
         });
         await batch.commit();
-        toast({ title: "Success", description: "Sample menu items have been added." });
+        toast({ title: "Welcome!", description: "We've added some sample menu items for you." });
     } catch (error) {
         toast({ variant: "destructive", title: "Error", description: "Failed to seed menu items."});
     }
@@ -158,17 +158,14 @@ export default function AdminMenuPage() {
   const handleFormSubmit = async (values: MenuFormValues) => {
     setIsSubmitting(true);
     
-    // The data that will be saved to Firestore
     const submissionData = {
         ...values,
         image: values.image || "https://placehold.co/600x400.png",
-         // The form might return a string, so we ensure it's an array.
         tags: Array.isArray(values.tags) ? values.tags : values.tags.split(',').map(t => t.trim())
     };
 
     try {
       if (editingDish) {
-        // --- Optimistic Update for Edit ---
         const originalItems = [...menuItems];
         setMenuItems(currentItems =>
           currentItems.map(item =>
@@ -179,7 +176,6 @@ export default function AdminMenuPage() {
         await updateDoc(dishRef, submissionData);
         toast({ title: "Success", description: "Menu item updated successfully." });
       } else {
-        // --- Regular Add with local update ---
         const docRef = await addDoc(collection(db, "menu"), submissionData);
         const newDish = { ...submissionData, id: docRef.id };
         setMenuItems(currentItems => [...currentItems, newDish]);
@@ -190,22 +186,20 @@ export default function AdminMenuPage() {
       setEditingDish(null);
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to save menu item." });
-      // If there was an error, we refetch to get the true state from the database
-      fetchMenuItems(); 
+      await fetchMenuItems(); 
     } finally {
       setIsSubmitting(false);
     }
   };
   
   const handleDeleteDish = async (dishId: string) => {
-    // Optimistic deletion
     const originalItems = [...menuItems];
     setMenuItems(prevItems => prevItems.filter(item => item.id !== dishId));
     try {
         await deleteDoc(doc(db, "menu", dishId));
         toast({ title: "Success", description: "Menu item deleted successfully." });
     } catch (error) {
-        setMenuItems(originalItems); // Rollback on error
+        setMenuItems(originalItems); 
         toast({ variant: "destructive", title: "Error", description: "Failed to delete menu item."});
     }
   }
@@ -411,3 +405,5 @@ export default function AdminMenuPage() {
     </div>
   );
 }
+
+    
