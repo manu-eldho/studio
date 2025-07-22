@@ -169,16 +169,17 @@ export default function AdminMenuPage() {
     try {
       if (editingDish) {
         // --- Optimistic Update for Edit ---
+        const originalItems = [...menuItems];
         setMenuItems(currentItems =>
           currentItems.map(item =>
-            item.id === editingDish.id ? { ...item, ...submissionData } : item
+            item.id === editingDish.id ? { ...item, ...submissionData, id: editingDish.id } : item
           )
         );
         const dishRef = doc(db, "menu", editingDish.id);
         await updateDoc(dishRef, submissionData);
         toast({ title: "Success", description: "Menu item updated successfully." });
       } else {
-        // --- Optimistic Update for Add ---
+        // --- Regular Add with local update ---
         const docRef = await addDoc(collection(db, "menu"), submissionData);
         const newDish = { ...submissionData, id: docRef.id };
         setMenuItems(currentItems => [...currentItems, newDish]);
@@ -189,7 +190,7 @@ export default function AdminMenuPage() {
       setEditingDish(null);
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to save menu item." });
-      // If there was an error, we can refetch to get the true state
+      // If there was an error, we refetch to get the true state from the database
       fetchMenuItems(); 
     } finally {
       setIsSubmitting(false);
@@ -410,5 +411,3 @@ export default function AdminMenuPage() {
     </div>
   );
 }
-
-    
