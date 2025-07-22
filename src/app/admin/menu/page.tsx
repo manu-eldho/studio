@@ -128,6 +128,7 @@ export default function AdminMenuPage() {
   
   const openAddDialog = () => {
     setEditingDish(null);
+    form.reset(); // Reset form for new item
     setIsDialogOpen(true);
   }
 
