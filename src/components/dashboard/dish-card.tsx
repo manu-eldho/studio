@@ -29,7 +29,8 @@ export function DishCard({ dish }: DishCardProps) {
             date: Timestamp.now(),
             status: 'Pending',
             total: dish.price,
-            items: [dish.name]
+            items: [dish.name],
+            customerName: "Jane Doe" // Hardcoded for now
         });
         toast({
             title: "Order Placed!",
@@ -69,7 +70,7 @@ export function DishCard({ dish }: DishCardProps) {
         <CardTitle className="font-headline text-xl mb-2">{dish.name}</CardTitle>
         <CardDescription>{dish.description}</CardDescription>
         <div className="mt-4 flex flex-wrap gap-2">
-            {dish.tags.map(tag => (
+            {Array.isArray(dish.tags) && dish.tags.map(tag => (
                 <Badge key={tag} variant="outline">{tag}</Badge>
             ))}
         </div>

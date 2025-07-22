@@ -13,9 +13,10 @@ export interface Dish {
 export interface Order {
   id: string;
   date: Timestamp;
-  status: 'Delivered' | 'Pending' | 'Cancelled';
+  status: 'Pending' | 'In Progress' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
   total: number;
   items: string[];
+  customerName?: string;
 }
 
 export interface LeaveRequest {

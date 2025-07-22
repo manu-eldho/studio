@@ -36,6 +36,14 @@ export default function MyOrdersPage() {
     };
     fetchOrders();
   }, []);
+  
+  const getStatusVariant = (status: Order['status']) => {
+    switch (status) {
+        case 'Delivered': return 'default';
+        case 'Cancelled': return 'destructive';
+        default: return 'secondary';
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -84,10 +92,10 @@ export default function MyOrdersPage() {
               <TableBody>
                 {orders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell className="font-medium">{order.id.slice(0, 7)}</TableCell>
                     <TableCell>{format(order.date, 'PPP')}</TableCell>
                     <TableCell>
-                      <Badge variant={order.status === 'Delivered' ? 'default' : order.status === 'Cancelled' ? 'destructive' : 'secondary'}>
+                      <Badge variant={getStatusVariant(order.status)}>
                         {order.status}
                       </Badge>
                     </TableCell>
