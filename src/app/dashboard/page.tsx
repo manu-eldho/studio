@@ -1,5 +1,4 @@
 import { BrowseMenu } from "@/components/dashboard/browse-menu";
-import { AiRecommendations } from "@/components/dashboard/ai-recommendations";
 
 export default function DashboardPage() {
   return (
@@ -7,10 +6,9 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold font-headline tracking-tight">Welcome, Foodie!</h1>
         <p className="text-muted-foreground">
-          Explore our menu and get personalized recommendations for your next meal.
+          Explore our menu and find your next favorite meal.
         </p>
       </div>
-      <AiRecommendations />
       <BrowseMenu />
     </div>
   );

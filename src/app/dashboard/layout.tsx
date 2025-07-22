@@ -1,9 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { BookMarked, LayoutDashboard, Menu, ScrollText, Sparkles, UtensilsCrossed, User, Users, ChefHat } from 'lucide-react';
+import { BookMarked, LayoutDashboard, Menu, ScrollText, UtensilsCrossed } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardLayout({
@@ -43,13 +42,6 @@ export default function DashboardLayout({
               >
                 <BookMarked className="h-4 w-4" />
                 My Orders
-              </Link>
-              <Link
-                href="#"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Sparkles className="h-4 w-4" />
-                AI Sommelier
               </Link>
             </nav>
           </div>
@@ -97,13 +89,6 @@ export default function DashboardLayout({
                 >
                   <BookMarked className="h-5 w-5" />
                   My Orders
-                </Link>
-                 <Link
-                  href="#"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Sparkles className="h-5 w-5" />
-                  AI Sommelier
                 </Link>
               </nav>
             </SheetContent>

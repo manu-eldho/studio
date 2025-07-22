@@ -2,8 +2,7 @@ import { DishCard } from "./dish-card";
 import { Dish } from "@/lib/types";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Button } from "../ui/button";
-import { Filter, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 const menu: Dish[] = [
   {
@@ -87,9 +86,6 @@ export function BrowseMenu() {
                 <SelectItem value="drink">Drink</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="w-full md:w-auto">
-              <Filter className="mr-2 h-4 w-4" /> Filter
-            </Button>
         </div>
       </div>
 
