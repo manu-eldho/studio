@@ -107,11 +107,32 @@ export default function AdminMenuPage() {
         });
         await batch.commit();
         toast({ title: "Success", description: "Sample menu items have been added." });
-        return fetchMenuItems();
     } catch (error) {
         toast({ variant: "destructive", title: "Error", description: "Failed to seed menu items."});
     }
   }
+
+  const fetchMenuItems = async (forceRefetch = false) => {
+    if (!forceRefetch) setLoading(true);
+    try {
+      const menuCollection = collection(db, "menu");
+      const menuSnapshot = await getDocs(menuCollection);
+      let menuList = menuSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Dish));
+
+      if (menuList.length === 0) {
+        await seedDatabase();
+        // After seeding, refetch the data to get the new items with their generated IDs
+        const newSnapshot = await getDocs(menuCollection);
+        menuList = newSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Dish));
+      }
+      
+      setMenuItems(menuList);
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to fetch menu items." });
+    } finally {
+      if (!forceRefetch) setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchMenuItems();
@@ -133,25 +154,7 @@ export default function AdminMenuPage() {
         tags: [],
       });
     }
-  }, [editingDish, form]);
-
-  const fetchMenuItems = async () => {
-    setLoading(true);
-    try {
-      const menuCollection = collection(db, "menu");
-      const menuSnapshot = await getDocs(menuCollection);
-      const menuList = menuSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Dish));
-      if (menuList.length === 0) {
-        await seedDatabase();
-      } else {
-        setMenuItems(menuList);
-      }
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to fetch menu items." });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [editingDish, form, isDialogOpen]);
 
   const handleFormSubmit = async (values: MenuFormValues) => {
     setIsSubmitting(true);
@@ -170,7 +173,7 @@ export default function AdminMenuPage() {
         });
         toast({ title: "Success", description: "Menu item added successfully." });
       }
-      fetchMenuItems();
+      fetchMenuItems(true); // Force refetch without showing loader
       setIsDialogOpen(false);
       setEditingDish(null);
     } catch (error) {
@@ -184,7 +187,7 @@ export default function AdminMenuPage() {
     try {
         await deleteDoc(doc(db, "menu", dishId));
         toast({ title: "Success", description: "Menu item deleted successfully." });
-        fetchMenuItems();
+        setMenuItems(prevItems => prevItems.filter(item => item.id !== dishId));
     } catch (error) {
         toast({ variant: "destructive", title: "Error", description: "Failed to delete menu item."});
     }
@@ -197,7 +200,6 @@ export default function AdminMenuPage() {
   
   const openAddDialog = () => {
     setEditingDish(null);
-    form.reset(); // Reset form for new item
     setIsDialogOpen(true);
   }
 
@@ -269,10 +271,15 @@ export default function AdminMenuPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+        setIsDialogOpen(isOpen);
+        if (!isOpen) {
+            setEditingDish(null);
+        }
+      }}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingDish ? "Edit Menu Item" : "Add New Menu Item"}</DialogTitle>
+            <DialogTitle>{editingDish ? "Edit Menu Item" : "Add New Item"}</DialogTitle>
             <DialogDescription>
               {editingDish ? "Update the details of the existing dish." : "Fill in the details for the new dish."}
             </DialogDescription>
@@ -383,6 +390,5 @@ export default function AdminMenuPage() {
       </Dialog>
     </div>
   );
-}
 
     
