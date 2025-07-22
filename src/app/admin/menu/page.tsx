@@ -113,7 +113,13 @@ export default function AdminMenuPage() {
   }
 
   const fetchMenuItems = async (forceRefetch = false) => {
-    if (!forceRefetch) setLoading(true);
+    if (forceRefetch) {
+      // For manual refetches, we don't want the big loading skeleton.
+      // The UI will just update when the new data is ready.
+    } else {
+       setLoading(true);
+    }
+    
     try {
       const menuCollection = collection(db, "menu");
       const menuSnapshot = await getDocs(menuCollection);
@@ -121,7 +127,6 @@ export default function AdminMenuPage() {
 
       if (menuList.length === 0) {
         await seedDatabase();
-        // After seeding, refetch the data to get the new items with their generated IDs
         const newSnapshot = await getDocs(menuCollection);
         menuList = newSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Dish));
       }
@@ -130,7 +135,9 @@ export default function AdminMenuPage() {
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to fetch menu items." });
     } finally {
-      if (!forceRefetch) setLoading(false);
+       if (!forceRefetch) {
+         setLoading(false);
+       }
     }
   };
 
@@ -173,7 +180,7 @@ export default function AdminMenuPage() {
         await addDoc(collection(db, "menu"), submissionData);
         toast({ title: "Success", description: "Menu item added successfully." });
       }
-      fetchMenuItems(true); // Force refetch without showing loader
+      fetchMenuItems(true); 
       setIsDialogOpen(false);
       setEditingDish(null);
     } catch (error) {
@@ -393,5 +400,7 @@ export default function AdminMenuPage() {
       </Dialog>
     </div>
   );
+
+    
 
     
