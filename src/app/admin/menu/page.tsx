@@ -80,7 +80,6 @@ const sampleDishes: Omit<Dish, 'id'>[] = [
 export default function AdminMenuPage() {
   const { toast } = useToast();
   const [menuItems, setMenuItems] = useState<Dish[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
@@ -116,7 +115,6 @@ export default function AdminMenuPage() {
   }
 
   const fetchMenuItems = async () => {
-    setLoading(true);
     try {
       await seedDatabase();
       const menuCollection = collection(db, "menu");
@@ -125,8 +123,6 @@ export default function AdminMenuPage() {
       setMenuItems(menuList);
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to fetch menu items." });
-    } finally {
-       setLoading(false);
     }
   };
 
@@ -244,57 +240,51 @@ export default function AdminMenuPage() {
       </div>
       <Card>
         <CardContent className="pt-6">
-          {loading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Image</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {menuItems.map((dish) => (
+                <TableRow key={dish.id}>
+                  <TableCell>
+                    <Image src={dish.image || "https://placehold.co/600x400.png"} alt={dish.name} width={64} height={64} className="rounded-md object-cover h-16 w-16" data-ai-hint="food dish" />
+                  </TableCell>
+                  <TableCell className="font-medium">{dish.name}</TableCell>
+                  <TableCell>{dish.category}</TableCell>
+                  <TableCell>${dish.price.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="outline" size="icon" onClick={() => openEditDialog(dish)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the menu item.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteDish(dish.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {menuItems.map((dish) => (
-                  <TableRow key={dish.id}>
-                    <TableCell>
-                      <Image src={dish.image || "https://placehold.co/600x400.png"} alt={dish.name} width={64} height={64} className="rounded-md object-cover h-16 w-16" data-ai-hint="food dish" />
-                    </TableCell>
-                    <TableCell className="font-medium">{dish.name}</TableCell>
-                    <TableCell>{dish.category}</TableCell>
-                    <TableCell>${dish.price.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">
-                       <div className="flex gap-2 justify-end">
-                          <Button variant="outline" size="icon" onClick={() => openEditDialog(dish)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                      <AlertDialogDescription>This action cannot be undone. This will permanently delete the menu item.</AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteDish(dish.id)}>Delete</AlertDialogAction>
-                                  </AlertDialogFooter>
-                              </AlertDialogContent>
-                          </AlertDialog>
-                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
