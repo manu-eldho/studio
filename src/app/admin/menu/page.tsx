@@ -113,10 +113,7 @@ export default function AdminMenuPage() {
   }
 
   const fetchMenuItems = async (forceRefetch = false) => {
-    if (forceRefetch) {
-      // For manual refetches, we don't want the big loading skeleton.
-      // The UI will just update when the new data is ready.
-    } else {
+    if (!forceRefetch) {
        setLoading(true);
     }
     
@@ -135,9 +132,7 @@ export default function AdminMenuPage() {
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to fetch menu items." });
     } finally {
-       if (!forceRefetch) {
-         setLoading(false);
-       }
+       setLoading(false);
     }
   };
 
@@ -178,7 +173,7 @@ export default function AdminMenuPage() {
         toast({ title: "Success", description: "Menu item updated successfully." });
       } else {
         await addDoc(collection(db, "menu"), submissionData);
-        toast({ title: "Success", description: "Menu item added successfully." });
+        toast({ title: "Item added", description: "The new dish has been saved." });
       }
       fetchMenuItems(true); 
       setIsDialogOpen(false);
@@ -400,6 +395,8 @@ export default function AdminMenuPage() {
       </Dialog>
     </div>
   );
+
+    
 
     
 
