@@ -41,12 +41,15 @@ export default function StaffLeavePage() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     console.log(values);
+    // Simulate API call
     setTimeout(() => {
         toast({
             title: "Request Submitted!",
             description: "Your leave request has been sent for approval.",
         });
         form.reset();
+        // also reset date range
+        form.setValue('dateRange', { from: undefined, to: undefined });
         setLoading(false);
     }, 1000);
   }
