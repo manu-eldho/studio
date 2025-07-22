@@ -162,14 +162,17 @@ export default function AdminMenuPage() {
     };
 
     if (editingDish) {
+        // Optimistic UI update for editing
         const originalItems = [...menuItems];
-        // Optimistically update UI
+        const updatedDish = { ...editingDish, ...submissionData };
         setMenuItems(currentItems =>
           currentItems.map(item =>
-            item.id === editingDish.id ? { ...item, ...submissionData, id: editingDish.id } : item
+            item.id === editingDish.id ? updatedDish : item
           )
         );
-        
+        setIsDialogOpen(false);
+        setEditingDish(null);
+
         try {
             const dishRef = doc(db, "menu", editingDish.id);
             await updateDoc(dishRef, submissionData);
@@ -180,17 +183,18 @@ export default function AdminMenuPage() {
             toast({ variant: "destructive", title: "Error", description: "Failed to update menu item." });
         }
     } else {
-        // Optimistically update UI for adding new item
+        // Optimistic UI update for adding
         const tempId = `temp-${Date.now()}`;
         const newDish = { ...submissionData, id: tempId };
         setMenuItems(currentItems => [...currentItems, newDish]);
+        setIsDialogOpen(false);
 
         try {
             const docRef = await addDoc(collection(db, "menu"), submissionData);
             // Replace temp ID with real ID from Firestore
             setMenuItems(currentItems =>
               currentItems.map(item =>
-                item.id === tempId ? { ...item, id: docRef.id } : item
+                item.id === tempId ? { ...newDish, id: docRef.id } : item
               )
             );
             toast({ title: "Item added", description: "The new dish has been saved." });
@@ -202,8 +206,6 @@ export default function AdminMenuPage() {
     }
       
     setIsSubmitting(false);
-    setIsDialogOpen(false);
-    setEditingDish(null);
   };
   
   const handleDeleteDish = async (dishId: string) => {
@@ -419,5 +421,3 @@ export default function AdminMenuPage() {
     </div>
   );
 }
-
-    
