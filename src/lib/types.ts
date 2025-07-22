@@ -17,3 +17,12 @@ export interface Order {
   total: number;
   items: string[];
 }
+
+export interface LeaveRequest {
+  id: string;
+  staffName: string;
+  startDate: Date | Timestamp;
+  endDate: Date | Timestamp;
+  reason: string;
+  status: 'Pending' | 'Approved' | 'Denied';
+}

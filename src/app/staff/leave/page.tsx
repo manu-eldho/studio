@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import React from "react";
 import { format } from "date-fns";
+import { collection, addDoc, getDocs, query, where, orderBy, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -20,6 +22,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { LeaveRequest } from "@/lib/types";
 
 const formSchema = z.object({
   dateRange: z.object({
@@ -29,18 +32,13 @@ const formSchema = z.object({
   reason: z.string().min(10, { message: "Reason must be at least 10 characters." }).max(200, { message: "Reason must be less than 200 characters." }),
 });
 
-type LeaveRequest = {
-  id: string;
-  startDate: Date;
-  endDate: Date;
-  reason: string;
-  status: 'Pending' | 'Approved' | 'Denied';
-};
 
 export default function StaffLeavePage() {
   const { toast } = useToast();
-  const [loading, setLoading] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [loadingHistory, setLoadingHistory] = React.useState(true);
   const [requestHistory, setRequestHistory] = React.useState<LeaveRequest[]>([]);
+  const staffName = "Jane Smith"; // Hardcoded for now, would come from auth in a real app
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,18 +47,47 @@ export default function StaffLeavePage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-        const newRequest: LeaveRequest = {
-            id: `LR${(requestHistory.length + 1).toString().padStart(3, '0')}`,
-            startDate: values.dateRange.from,
-            endDate: values.dateRange.to,
+  const fetchHistory = async () => {
+    setLoadingHistory(true);
+    try {
+        const q = query(
+            collection(db, "leaveRequests"), 
+            where("staffName", "==", staffName),
+            orderBy("startDate", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        const history = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                startDate: data.startDate.toDate(),
+                endDate: data.endDate.toDate(),
+            } as LeaveRequest;
+        });
+        setRequestHistory(history);
+    } catch (error) {
+        console.error("Error fetching history: ", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not load request history."});
+    } finally {
+        setLoadingHistory(false);
+    }
+  }
+
+  React.useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setSubmitting(true);
+    try {
+        await addDoc(collection(db, "leaveRequests"), {
+            staffName,
+            startDate: Timestamp.fromDate(values.dateRange.from),
+            endDate: Timestamp.fromDate(values.dateRange.to),
             reason: values.reason,
             status: 'Pending',
-        };
-        setRequestHistory(prev => [newRequest, ...prev]);
+        });
 
         toast({
             title: "Request Submitted!",
@@ -68,9 +95,18 @@ export default function StaffLeavePage() {
         });
         
         form.reset();
-        form.setValue('dateRange', { from: undefined, to: undefined });
-        setLoading(false);
-    }, 1000);
+        // Manually reset date range as react-hook-form doesn't reset it automatically
+        form.setValue('dateRange', { from: undefined, to: undefined }); 
+        
+        // Refetch history to show the new request
+        await fetchHistory();
+
+    } catch (error) {
+        console.error("Error submitting request: ", error);
+        toast({ variant: "destructive", title: "Error", description: "Failed to submit your request."});
+    } finally {
+        setSubmitting(false);
+    }
   }
 
   return (
@@ -152,8 +188,8 @@ export default function StaffLeavePage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={loading}>
-                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              <Button type="submit" disabled={submitting}>
+                 {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                 Submit Request
               </Button>
             </form>
@@ -166,7 +202,9 @@ export default function StaffLeavePage() {
           <CardDescription>Your past and pending leave requests.</CardDescription>
         </CardHeader>
         <CardContent>
-            {requestHistory.length > 0 ? (
+            {loadingHistory ? (
+                <p className="text-muted-foreground">Loading history...</p>
+            ) : requestHistory.length > 0 ? (
                 <Table>
                     <TableHeader>
                         <TableRow>
