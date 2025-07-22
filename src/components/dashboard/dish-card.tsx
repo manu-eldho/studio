@@ -1,15 +1,53 @@
+
+"use client";
+
 import Image from "next/image";
+import React, { useState } from "react";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Dish } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { PlusCircle } from "lucide-react";
+import { Loader2, PlusCircle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+
 
 interface DishCardProps {
   dish: Dish;
 }
 
 export function DishCard({ dish }: DishCardProps) {
+  const { toast } = useToast();
+  const [isOrdering, setIsOrdering] = useState(false);
+
+  const handlePlaceOrder = async () => {
+    setIsOrdering(true);
+    try {
+        await addDoc(collection(db, "orders"), {
+            date: Timestamp.now(),
+            status: 'Pending',
+            total: dish.price,
+            items: [dish.name]
+        });
+        toast({
+            title: "Order Placed!",
+            description: `${dish.name} has been added to your orders.`,
+        });
+    } catch (error) {
+        console.error("Error placing order:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to place your order.",
+        });
+    } finally {
+        setIsOrdering(false);
+    }
+  }
+
+
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
       <CardHeader className="p-0">
@@ -40,13 +78,30 @@ export function DishCard({ dish }: DishCardProps) {
         <div>
           <span className="text-2xl font-bold">${dish.price.toFixed(2)}</span>
         </div>
-        <Button>
-            <PlusCircle className="mr-2" />
-            Add to Order
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button disabled={isOrdering}>
+                {isOrdering ? <Loader2 className="mr-2 animate-spin"/> : <PlusCircle className="mr-2" />}
+                Add to Order
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Your Order</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to order one {dish.name} for ${dish.price.toFixed(2)}?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handlePlaceOrder} disabled={isOrdering}>
+                {isOrdering ? <Loader2 className="mr-2 animate-spin"/> : null}
+                Place Order
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardFooter>
     </Card>
   );
 }
-
-    
