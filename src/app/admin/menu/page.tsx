@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -34,6 +34,49 @@ const menuFormSchema = z.object({
 
 type MenuFormValues = z.infer<typeof menuFormSchema>;
 
+const sampleDishes: Omit<Dish, 'id'>[] = [
+    {
+        name: "Margherita Pizza",
+        description: "Classic pizza with fresh mozzarella, tomatoes, and basil.",
+        price: 12.99,
+        category: "Main Course",
+        image: "https://images.pexels.com/photos/1653877/pexels-photo-1653877.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+        tags: ["Vegetarian", "Classic"]
+    },
+    {
+        name: "Caesar Salad",
+        description: "Crisp romaine lettuce with Caesar dressing, croutons, and Parmesan cheese.",
+        price: 8.50,
+        category: "Appetizer",
+        image: "https://images.pexels.com/photos/2097090/pexels-photo-2097090.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+        tags: ["Salad", "Light"]
+    },
+    {
+        name: "Chocolate Lava Cake",
+        description: "Warm chocolate cake with a gooey molten center, served with vanilla ice cream.",
+        price: 7.25,
+        category: "Dessert",
+        image: "https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+        tags: ["Chocolate", "Sweet", "Popular"]
+    },
+    {
+        name: "Iced Tea",
+        description: "Freshly brewed iced tea with a hint of lemon.",
+        price: 2.99,
+        category: "Drink",
+        image: "https://images.pexels.com/photos/1417945/pexels-photo-1417945.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+        tags: ["Refreshing", "Cold"]
+    },
+     {
+        name: "Spaghetti Carbonara",
+        description: "Pasta with a creamy sauce, pancetta, and pecorino cheese.",
+        price: 15.00,
+        category: "Main Course",
+        image: "https://images.pexels.com/photos/128408/pexels-photo-128408.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+        tags: ["Pasta", "Italian", "Rich"]
+    }
+];
+
 export default function AdminMenuPage() {
   const { toast } = useToast();
   const [menuItems, setMenuItems] = useState<Dish[]>([]);
@@ -53,6 +96,22 @@ export default function AdminMenuPage() {
       tags: [],
     },
   });
+
+  const seedDatabase = async () => {
+    try {
+        const menuCollection = collection(db, "menu");
+        const batch = writeBatch(db);
+        sampleDishes.forEach(dish => {
+            const docRef = doc(menuCollection);
+            batch.set(docRef, dish);
+        });
+        await batch.commit();
+        toast({ title: "Success", description: "Sample menu items have been added." });
+        return fetchMenuItems();
+    } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to seed menu items."});
+    }
+  }
 
   useEffect(() => {
     fetchMenuItems();
@@ -82,7 +141,11 @@ export default function AdminMenuPage() {
       const menuCollection = collection(db, "menu");
       const menuSnapshot = await getDocs(menuCollection);
       const menuList = menuSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Dish));
-      setMenuItems(menuList);
+      if (menuList.length === 0) {
+        await seedDatabase();
+      } else {
+        setMenuItems(menuList);
+      }
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to fetch menu items." });
     } finally {
@@ -95,10 +158,16 @@ export default function AdminMenuPage() {
     try {
       if (editingDish) {
         const dishRef = doc(db, "menu", editingDish.id);
-        await updateDoc(dishRef, values);
+        await updateDoc(dishRef, {
+            ...values,
+            tags: Array.isArray(values.tags) ? values.tags : values.tags.split(',').map(t => t.trim())
+        });
         toast({ title: "Success", description: "Menu item updated successfully." });
       } else {
-        await addDoc(collection(db, "menu"), values);
+        await addDoc(collection(db, "menu"), {
+           ...values,
+            tags: Array.isArray(values.tags) ? values.tags : values.tags.split(',').map(t => t.trim())
+        });
         toast({ title: "Success", description: "Menu item added successfully." });
       }
       fetchMenuItems();
@@ -315,3 +384,5 @@ export default function AdminMenuPage() {
     </div>
   );
 }
+
+    
