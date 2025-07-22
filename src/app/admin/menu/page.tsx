@@ -100,13 +100,16 @@ export default function AdminMenuPage() {
   const seedDatabase = async () => {
     try {
         const menuCollection = collection(db, "menu");
-        const batch = writeBatch(db);
-        sampleDishes.forEach(dish => {
-            const docRef = doc(menuCollection);
-            batch.set(docRef, dish);
-        });
-        await batch.commit();
-        toast({ title: "Welcome!", description: "We've added some sample menu items for you." });
+        const snapshot = await getDocs(menuCollection);
+        if (snapshot.empty) {
+            const batch = writeBatch(db);
+            sampleDishes.forEach(dish => {
+                const docRef = doc(menuCollection);
+                batch.set(docRef, dish);
+            });
+            await batch.commit();
+            toast({ title: "Welcome!", description: "We've added some sample menu items for you." });
+        }
     } catch (error) {
         toast({ variant: "destructive", title: "Error", description: "Failed to seed menu items."});
     }
@@ -115,16 +118,10 @@ export default function AdminMenuPage() {
   const fetchMenuItems = async () => {
     setLoading(true);
     try {
+      await seedDatabase();
       const menuCollection = collection(db, "menu");
       const menuSnapshot = await getDocs(menuCollection);
-      let menuList = menuSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Dish));
-
-      if (menuList.length === 0) {
-        await seedDatabase();
-        const newSnapshot = await getDocs(menuCollection);
-        menuList = newSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Dish));
-      }
-      
+      const menuList = menuSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Dish));
       setMenuItems(menuList);
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to fetch menu items." });
@@ -164,32 +161,49 @@ export default function AdminMenuPage() {
         tags: Array.isArray(values.tags) ? values.tags : values.tags.split(',').map(t => t.trim())
     };
 
-    try {
-      if (editingDish) {
+    if (editingDish) {
         const originalItems = [...menuItems];
+        // Optimistically update UI
         setMenuItems(currentItems =>
           currentItems.map(item =>
             item.id === editingDish.id ? { ...item, ...submissionData, id: editingDish.id } : item
           )
         );
-        const dishRef = doc(db, "menu", editingDish.id);
-        await updateDoc(dishRef, submissionData);
-        toast({ title: "Success", description: "Menu item updated successfully." });
-      } else {
-        const docRef = await addDoc(collection(db, "menu"), submissionData);
-        const newDish = { ...submissionData, id: docRef.id };
+        
+        try {
+            const dishRef = doc(db, "menu", editingDish.id);
+            await updateDoc(dishRef, submissionData);
+            toast({ title: "Success", description: "Menu item updated successfully." });
+        } catch (error) {
+            // Rollback on error
+            setMenuItems(originalItems);
+            toast({ variant: "destructive", title: "Error", description: "Failed to update menu item." });
+        }
+    } else {
+        // Optimistically update UI for adding new item
+        const tempId = `temp-${Date.now()}`;
+        const newDish = { ...submissionData, id: tempId };
         setMenuItems(currentItems => [...currentItems, newDish]);
-        toast({ title: "Item added", description: "The new dish has been saved." });
-      }
-      
-      setIsDialogOpen(false);
-      setEditingDish(null);
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to save menu item." });
-      await fetchMenuItems(); 
-    } finally {
-      setIsSubmitting(false);
+
+        try {
+            const docRef = await addDoc(collection(db, "menu"), submissionData);
+            // Replace temp ID with real ID from Firestore
+            setMenuItems(currentItems =>
+              currentItems.map(item =>
+                item.id === tempId ? { ...item, id: docRef.id } : item
+              )
+            );
+            toast({ title: "Item added", description: "The new dish has been saved." });
+        } catch (error) {
+            // Rollback on error
+            setMenuItems(currentItems => currentItems.filter(item => item.id !== tempId));
+            toast({ variant: "destructive", title: "Error", description: "Failed to save menu item." });
+        }
     }
+      
+    setIsSubmitting(false);
+    setIsDialogOpen(false);
+    setEditingDish(null);
   };
   
   const handleDeleteDish = async (dishId: string) => {
