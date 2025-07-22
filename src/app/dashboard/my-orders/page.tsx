@@ -1,36 +1,45 @@
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
-const orders = [
-  {
-    id: "ORD001",
-    date: "2024-07-20",
-    status: "Delivered",
-    total: 32.50,
-    items: ["Spicy Szechuan Chicken", "Crispy Spring Rolls"]
-  },
-  {
-    id: "ORD002",
-    date: "2024-07-15",
-    status: "Delivered",
-    total: 23.50,
-    items: ["Gourmet Truffle Burger", "Refreshing Mojito"]
-  },
-    {
-    id: "ORD003",
-    date: "2024-07-10",
-    status: "Cancelled",
-    total: 14.00,
-    items: ["Classic Margherita Pizza"]
-  },
-];
-
+import { Order } from "@/lib/types";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MyOrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const ordersCollection = query(collection(db, "orders"), orderBy("date", "desc"));
+        const ordersSnapshot = await getDocs(ordersCollection);
+        const ordersList = ordersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                date: data.date.toDate(), // Convert Firestore Timestamp to JS Date
+            } as Order;
+        });
+        setOrders(ordersList);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+
   return (
     <div className="space-y-8">
-       <div>
+      <div>
         <h1 className="text-3xl font-bold font-headline tracking-tight">My Orders</h1>
         <p className="text-muted-foreground">
           View your order history.
@@ -38,32 +47,57 @@ export default function MyOrdersPage() {
       </div>
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.date}</TableCell>
-                  <TableCell>
-                    <Badge variant={order.status === 'Delivered' ? 'default' : order.status === 'Cancelled' ? 'destructive' : 'secondary'}>
-                      {order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{order.items.join(', ')}</TableCell>
-                  <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+          {loading ? (
+             <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Items</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[...Array(3)].map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+             </Table>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {orders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell>{format(order.date, 'PPP')}</TableCell>
+                    <TableCell>
+                      <Badge variant={order.status === 'Delivered' ? 'default' : order.status === 'Cancelled' ? 'destructive' : 'secondary'}>
+                        {order.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{order.items.join(', ')}</TableCell>
+                    <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

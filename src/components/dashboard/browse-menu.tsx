@@ -4,64 +4,11 @@ import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Search } from "lucide-react";
 
-const menu: Dish[] = [
-  {
-    id: "1",
-    name: "Spicy Szechuan Chicken",
-    description: "A fiery classic with tender chicken, peanuts, and chili peppers.",
-    price: 18.50,
-    image: "https://placehold.co/600x400/c2410c/FFFFFF",
-    category: "Main Course",
-    tags: ["Spicy", "Chicken", "Popular"],
-  },
-  {
-    id: "2",
-    name: "Classic Margherita Pizza",
-    description: "Simple yet delicious with fresh mozzarella, tomatoes, and basil.",
-    price: 14.00,
-    image: "https://placehold.co/600x400/facc15/FFFFFF",
-    category: "Main Course",
-    tags: ["Vegetarian", "Italian"],
-  },
-  {
-    id: "3",
-    name: "Crispy Spring Rolls",
-    description: "Golden-fried rolls filled with vegetables and glass noodles.",
-    price: 8.00,
-    image: "https://placehold.co/600x400/fbbf24/FFFFFF",
-    category: "Appetizer",
-    tags: ["Vegetarian", "Starter"],
-  },
-  {
-    id: "4",
-    name: "Gourmet Truffle Burger",
-    description: "Juicy beef patty with truffle aioli, arugula, and swiss cheese.",
-    price: 22.00,
-    image: "https://placehold.co/600x400/ea580c/FFFFFF",
-    category: "Main Course",
-    tags: ["Beef", "Gourmet"],
-  },
-  {
-    id: "5",
-    name: "Decadent Chocolate Lava Cake",
-    description: "Warm, molten chocolate cake served with a scoop of vanilla ice cream.",
-    price: 9.50,
-    image: "https://placehold.co/600x400/d97706/FFFFFF",
-    category: "Dessert",
-    tags: ["Sweet", "Chocolate"],
-  },
-  {
-    id: "6",
-    name: "Refreshing Mojito",
-    description: "A classic Cuban cocktail with mint, lime, and rum.",
-    price: 12.00,
-    image: "https://placehold.co/600x400/a3e635/FFFFFF",
-    category: "Drink",
-    tags: ["Cocktail", "Alcoholic"],
-  },
-];
+interface BrowseMenuProps {
+  menu: Dish[];
+}
 
-export function BrowseMenu() {
+export function BrowseMenu({ menu }: BrowseMenuProps) {
   return (
     <section className="space-y-6">
       <div>
