@@ -24,20 +24,20 @@ export default function DashboardLayout({
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
               <Link
                 href="/dashboard"
-                className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
               >
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
               </Link>
               <Link
-                href="#"
+                href="/dashboard/menu"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
               >
                 <ScrollText className="h-4 w-4" />
                 Menu
               </Link>
               <Link
-                href="#"
+                href="/dashboard/my-orders"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
               >
                 <BookMarked className="h-4 w-4" />
@@ -71,20 +71,20 @@ export default function DashboardLayout({
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl bg-muted px-3 py-2 text-foreground hover:text-foreground"
+                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
                 >
                   <LayoutDashboard className="h-5 w-5" />
                   Dashboard
                 </Link>
                 <Link
-                  href="#"
+                  href="/dashboard/menu"
                   className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
                 >
                   <ScrollText className="h-5 w-5" />
                   Menu
                 </Link>
                 <Link
-                  href="#"
+                  href="/dashboard/my-orders"
                   className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
                 >
                   <BookMarked className="h-5 w-5" />

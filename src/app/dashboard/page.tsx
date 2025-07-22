@@ -1,4 +1,3 @@
-import { BrowseMenu } from "@/components/dashboard/browse-menu";
 
 export default function DashboardPage() {
   return (
@@ -9,7 +8,6 @@ export default function DashboardPage() {
           Explore our menu and find your next favorite meal.
         </p>
       </div>
-      <BrowseMenu />
     </div>
   );
 }
