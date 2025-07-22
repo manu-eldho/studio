@@ -15,7 +15,7 @@ export function DishCard({ dish }: DishCardProps) {
       <CardHeader className="p-0">
         <div className="relative">
           <Image
-            src={dish.image}
+            src={dish.image || "https://placehold.co/600x400.png"}
             alt={dish.name}
             width={600}
             height={400}
@@ -48,3 +48,5 @@ export function DishCard({ dish }: DishCardProps) {
     </Card>
   );
 }
+
+    

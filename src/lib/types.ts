@@ -5,7 +5,7 @@ export interface Dish {
   name: string;
   description: string;
   price: number;
-  image: string;
+  image?: string;
   category: 'Main Course' | 'Appetizer' | 'Dessert' | 'Drink';
   tags: string[];
 }
@@ -26,3 +26,5 @@ export interface LeaveRequest {
   reason: string;
   status: 'Pending' | 'Approved' | 'Denied';
 }
+
+    

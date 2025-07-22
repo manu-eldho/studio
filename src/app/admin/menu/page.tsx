@@ -28,7 +28,7 @@ const menuFormSchema = z.object({
   description: z.string().min(10, { message: "Description must be at least 10 characters." }),
   price: z.coerce.number().min(0, { message: "Price must be a positive number." }),
   category: z.enum(['Main Course', 'Appetizer', 'Dessert', 'Drink']),
-  image: z.string().url({ message: "Please enter a valid image URL." }),
+  image: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   tags: z.string().transform(val => val.split(',').map(tag => tag.trim()).filter(Boolean)),
 });
 
@@ -158,19 +158,19 @@ export default function AdminMenuPage() {
 
   const handleFormSubmit = async (values: MenuFormValues) => {
     setIsSubmitting(true);
+    const submissionData = {
+        ...values,
+        image: values.image || "https://placehold.co/600x400.png",
+        tags: Array.isArray(values.tags) ? values.tags : values.tags.split(',').map(t => t.trim())
+    };
+
     try {
       if (editingDish) {
         const dishRef = doc(db, "menu", editingDish.id);
-        await updateDoc(dishRef, {
-            ...values,
-            tags: Array.isArray(values.tags) ? values.tags : values.tags.split(',').map(t => t.trim())
-        });
+        await updateDoc(dishRef, submissionData);
         toast({ title: "Success", description: "Menu item updated successfully." });
       } else {
-        await addDoc(collection(db, "menu"), {
-           ...values,
-            tags: Array.isArray(values.tags) ? values.tags : values.tags.split(',').map(t => t.trim())
-        });
+        await addDoc(collection(db, "menu"), submissionData);
         toast({ title: "Success", description: "Menu item added successfully." });
       }
       fetchMenuItems(true); // Force refetch without showing loader
@@ -236,7 +236,7 @@ export default function AdminMenuPage() {
                 {menuItems.map((dish) => (
                   <TableRow key={dish.id}>
                     <TableCell>
-                      <Image src={dish.image} alt={dish.name} width={64} height={64} className="rounded-md object-cover h-16 w-16" data-ai-hint="food dish" />
+                      <Image src={dish.image || "https://placehold.co/600x400.png"} alt={dish.name} width={64} height={64} className="rounded-md object-cover h-16 w-16" data-ai-hint="food dish" />
                     </TableCell>
                     <TableCell className="font-medium">{dish.name}</TableCell>
                     <TableCell>{dish.category}</TableCell>
@@ -357,6 +357,9 @@ export default function AdminMenuPage() {
                     <FormControl>
                       <Input placeholder="https://placehold.co/600x400.png" {...field} />
                     </FormControl>
+                     <FormDescription>
+                        Optional. If left blank, a placeholder image will be used.
+                      </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
