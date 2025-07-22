@@ -17,6 +17,8 @@ export interface Order {
   total: number;
   items: string[];
   customerName?: string;
+  paymentStatus: 'Paid' | 'Unpaid';
+  reviewed: boolean;
 }
 
 export interface LeaveRequest {
@@ -28,4 +30,12 @@ export interface LeaveRequest {
   status: 'Pending' | 'Approved' | 'Denied';
 }
 
-    
+export interface Review {
+    id: string;
+    orderId: string;
+    customerName: string;
+    rating: number;
+    comment: string;
+    date: Timestamp;
+    dishName: string; // To easily show which dish is being reviewed
+}

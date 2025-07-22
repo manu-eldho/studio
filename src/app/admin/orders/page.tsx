@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, updateDoc, doc, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, query, orderBy, writeBatch } from "firebase/firestore";
 import { format } from "date-fns";
 
 import { db } from "@/lib/firebase";
@@ -10,7 +10,7 @@ import type { Order } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,7 +32,9 @@ export default function AdminOrdersPage() {
           id: doc.id,
           ...data,
           date: data.date.toDate(),
-          customerName: data.customerName || "Guest User"
+          customerName: data.customerName || "Guest User",
+          paymentStatus: data.paymentStatus || 'Unpaid',
+          reviewed: data.reviewed || false
         } as Order;
       });
       setOrders(fetchedOrders);
@@ -50,7 +52,6 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
      const originalOrders = [...orders];
-    // Optimistic UI update
     setOrders(currentOrders =>
       currentOrders.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order
@@ -67,6 +68,26 @@ export default function AdminOrdersPage() {
       toast({ variant: "destructive", title: "Error", description: "Failed to update order status." });
     }
   };
+
+  const handlePaymentStatusChange = async (orderId: string, newStatus: Order['paymentStatus']) => {
+    const originalOrders = [...orders];
+    setOrders(currentOrders =>
+      currentOrders.map(order =>
+        order.id === orderId ? { ...order, paymentStatus: newStatus } : order
+      )
+    );
+
+    try {
+        const orderRef = doc(db, "orders", orderId);
+        await updateDoc(orderRef, { paymentStatus: newStatus });
+        toast({ title: "Success", description: `Payment status updated.` });
+    } catch (error) {
+        console.error("Error updating payment status:", error);
+        setOrders(originalOrders);
+        toast({ variant: "destructive", title: "Error", description: "Failed to update payment status." });
+    }
+  }
+
 
   const getStatusVariant = (status: Order['status']) => {
     switch (status) {
@@ -106,6 +127,7 @@ export default function AdminOrdersPage() {
                   <TableHead>Customer</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
                   <TableHead>Items</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -119,6 +141,11 @@ export default function AdminOrdersPage() {
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status)}>
                         {order.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={order.paymentStatus === 'Paid' ? 'default' : 'destructive'}>
+                        {order.paymentStatus}
                       </Badge>
                     </TableCell>
                     <TableCell>{order.items.join(', ')}</TableCell>
@@ -137,6 +164,9 @@ export default function AdminOrdersPage() {
                                 <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Out for Delivery')}>Out for Delivery</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Delivered')}>Delivered</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Cancelled')} className="text-destructive">Cancel</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handlePaymentStatusChange(order.id, 'Paid')}>Mark as Paid</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handlePaymentStatusChange(order.id, 'Unpaid')}>Mark as Unpaid</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>

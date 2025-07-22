@@ -30,7 +30,9 @@ export function DishCard({ dish }: DishCardProps) {
             status: 'Pending',
             total: dish.price,
             items: [dish.name],
-            customerName: "Jane Doe" // Hardcoded for now
+            customerName: "Jane Doe", // Hardcoded for now
+            paymentStatus: 'Unpaid',
+            reviewed: false
         });
         toast({
             title: "Order Placed!",
@@ -90,7 +92,7 @@ export function DishCard({ dish }: DishCardProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Your Order</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to order one {dish.name} for ${dish.price.toFixed(2)}?
+                Are you sure you want to order one {dish.name} for ${dish.price.toFixed(2)}? This will be added to your orders with a "Pay Later" option.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

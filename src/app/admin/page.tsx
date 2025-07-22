@@ -1,15 +1,21 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Order } from "@/lib/types";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart, CalendarClock, DollarSign, Package, ScrollText, ShoppingCart, Users } from "lucide-react";
+import { BarChart, CalendarClock, DollarSign, Package, ScrollText, ShoppingCart, Star, Users } from "lucide-react";
 import Link from "next/link";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from "recharts";
+import { Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { BarChart as RechartsBarChart } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 const salesData = [
@@ -22,15 +28,65 @@ const salesData = [
   { date: 'Sun', sales: 3490 },
 ];
 
-const recentOrders = [
-    {id: 'ORD001', customer: 'John Doe', amount: 45.50, status: 'Delivered'},
-    {id: 'ORD002', customer: 'Jane Smith', amount: 89.99, status: 'Pending'},
-    {id: 'ORD003', customer: 'Peter Jones', amount: 12.00, status: 'In Progress'},
-    {id: 'ORD004', customer: 'Mary Williams', amount: 32.75, status: 'Delivered'},
-    {id: 'ORD005', customer: 'David Brown', amount: 55.00, status: 'Cancelled'},
-]
+interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  pendingOrders: number;
+  amountDue: number;
+}
 
 export default function AdminDashboardPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrdersAndCalcStats = async () => {
+      setLoading(true);
+      try {
+        const querySnapshot = await getDocs(collection(db, "orders"));
+        const fetchedOrders = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            date: data.date.toDate(),
+          } as Order;
+        });
+        setOrders(fetchedOrders);
+        
+        // Calculate stats
+        const totalRevenue = fetchedOrders
+          .filter(o => o.paymentStatus === 'Paid')
+          .reduce((sum, o) => sum + o.total, 0);
+        const amountDue = fetchedOrders
+          .filter(o => o.paymentStatus === 'Unpaid')
+          .reduce((sum, o) => sum + o.total, 0);
+        const totalOrders = fetchedOrders.length;
+        const pendingOrders = fetchedOrders.filter(o => o.status === 'Pending').length;
+        
+        setStats({ totalRevenue, totalOrders, pendingOrders, amountDue });
+
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchOrdersAndCalcStats();
+  }, []);
+
+  const getStatusVariant = (status: Order['status']) => {
+    switch (status) {
+        case 'Delivered': return 'default';
+        case 'Cancelled': return 'destructive';
+        default: return 'secondary';
+    }
+  }
+
+  const recentOrders = orders.slice(0, 5);
+
   return (
     <div className="space-y-8">
       <div>
@@ -41,46 +97,57 @@ export default function AdminDashboardPage() {
       </div>
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <ShoppingCart className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
-            <p className="text-xs text-muted-foreground">+180.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-            <Package className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">Waiting for processing</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Staff on Duty</CardTitle>
-            <Users className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-muted-foreground">Currently active</p>
-          </CardContent>
-        </Card>
+        {loading || !stats ? (
+          <>
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+          </>
+        ) : (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <DollarSign className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">From all paid orders.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+                <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+{stats.totalOrders}</div>
+                <p className="text-xs text-muted-foreground">Total orders received.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+                <Package className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.pendingOrders}</div>
+                <p className="text-xs text-muted-foreground">Waiting for processing.</p>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Amount Due</CardTitle>
+                <DollarSign className="h-5 w-5 text-destructive" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-destructive">${stats.amountDue.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">From all unpaid orders.</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </section>
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-5">
@@ -110,6 +177,7 @@ export default function AdminDashboardPage() {
             <CardDescription>The last 5 orders from customers.</CardDescription>
           </CardHeader>
           <CardContent>
+            {loading ? <Skeleton className="h-48 w-full" /> : (
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -121,17 +189,18 @@ export default function AdminDashboardPage() {
                 <TableBody>
                     {recentOrders.map(order => (
                         <TableRow key={order.id}>
-                            <TableCell className="font-medium">{order.customer}</TableCell>
+                            <TableCell className="font-medium">{order.customerName}</TableCell>
                             <TableCell>
-                                <Badge variant={order.status === 'Delivered' ? 'default' : order.status === 'Cancelled' ? 'destructive' : 'secondary'}>
+                                <Badge variant={getStatusVariant(order.status)}>
                                     {order.status}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="text-right">${order.amount.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
+            )}
           </CardContent>
         </Card>
       </section>
@@ -159,13 +228,13 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                 </Card>
             </Link>
-             <Link href="/admin/staff">
+             <Link href="/admin/reviews">
                 <Card className="hover:bg-muted/50 transition-colors h-full">
                     <CardHeader className="flex-row items-center gap-4">
                         <div className="bg-primary/10 p-3 rounded-full">
-                            <Users className="h-6 w-6 text-primary" />
+                            <Star className="h-6 w-6 text-primary" />
                         </div>
-                        <CardTitle>Manage Staff</CardTitle>
+                        <CardTitle>View Reviews</CardTitle>
                     </CardHeader>
                 </Card>
             </Link>

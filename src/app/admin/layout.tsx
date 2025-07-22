@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { BarChart, CalendarClock, ChefHat, Menu, ScrollText, Settings, ShoppingCart, UtensilsCrossed, Users } from 'lucide-react';
+import { BarChart, CalendarClock, ChefHat, Menu, ScrollText, Settings, ShoppingCart, Star, UtensilsCrossed, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminLayout({
@@ -56,6 +56,13 @@ export default function AdminLayout({
               >
                 <CalendarClock className="h-4 w-4" />
                 Leave Requests
+              </Link>
+               <Link
+                href="/admin/reviews"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <Star className="h-4 w-4" />
+                Customer Reviews
               </Link>
             </nav>
           </div>
@@ -117,6 +124,13 @@ export default function AdminLayout({
                 >
                   <CalendarClock className="h-5 w-5" />
                   Leave Requests
+                </Link>
+                <Link
+                  href="/admin/reviews"
+                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                >
+                  <Star className="h-5 w-5" />
+                  Customer Reviews
                 </Link>
               </nav>
             </SheetContent>
