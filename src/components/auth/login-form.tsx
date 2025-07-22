@@ -56,7 +56,19 @@ export function LoginForm() {
     setTimeout(() => {
       // In a real app, you would handle authentication here
       // and redirect based on the actual role from the server.
-      router.push("/dashboard");
+      switch (values.role) {
+        case "admin":
+          router.push("/admin");
+          break;
+        case "staff":
+          // Redirect to a future staff dashboard
+          router.push("/dashboard"); 
+          break;
+        case "customer":
+        default:
+          router.push("/dashboard");
+          break;
+      }
     }, 1000);
   }
 
